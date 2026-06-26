@@ -1,0 +1,85 @@
+local P,RS,UIS=game:GetService("Players"),game:GetService("RunService"),game:GetService("UserInputService")
+local LP=P.LocalPlayer;if not LP:FindFirstChild("PlayerGui") then LP:GetPropertyChangedSignal("Parent"):Wait() end
+local vRun,oRun,aRun,teamCheck,tMode=false,false,false,false,"Closest"
+local cVoid,cDist,cSpeed=1e7,1e6,5e6
+local old=LP:WaitForChild("PlayerGui"):FindFirstChild("JH_UI") or game:GetService("CoreGui"):FindFirstChild("JH_UI")
+if old then old:Destroy() end
+local SG=Instance.new("ScreenGui");SG.Name="JH_UI";SG.ResetOnSpawn=false
+if not pcall(function() SG.Parent=game:GetService("CoreGui") end) then SG.Parent=LP:WaitForChild("PlayerGui") end
+
+local function cInst(c,pr,p) for k,v in pairs(p) do c[k]=v end;c.Parent=pr;return c end
+local function cLbl(p,t,pos,sz,al) return cInst(Instance.new("TextLabel"),p,{BackgroundTransparency=1,Position=pos,Size=sz,Font=Enum.Font.Code,Text=t,TextColor3=Color3.fromRGB(120,125,140),TextSize=13,TextXAlignment=al,ZIndex=12}) end
+
+local MB=cInst(Instance.new("TextButton"),SG,{Name="MenuButton",BackgroundColor3=Color3.fromRGB(15,15,15),BorderSizePixel=0,Position=UDim2.new(0,25,0.7,0),Size=UDim2.new(0,75,0,30),Font=Enum.Font.Code,Text="Menu",TextColor3=Color3.fromRGB(255,255,255),TextSize=13,ZIndex=20})
+cInst(Instance.new("UICorner"),MB,{CornerRadius=UDim.new(0,5)})
+
+local mD,mS,mP=false,nil,nil
+MB.InputBegan:Connect(function(i) if i.UserInputType.Name=="MouseButton1" or i.UserInputType.Name=="Touch" then mD=true;mS=i.Position;mP=MB.Position end end)
+UIS.InputChanged:Connect(function(i) if mD and (i.UserInputType.Name=="MouseMovement" or i.UserInputType.Name=="Touch") then local d=i.Position-mS;MB.Position=UDim2.new(mP.X.Scale,mP.X.Offset+d.X,mP.Y.Scale,mP.Y.Offset+d.Y) end end)
+UIS.InputEnded:Connect(function(i) if i.UserInputType.Name=="MouseButton1" or i.UserInputType.Name=="Touch" then mD=false end end)
+
+local MF=cInst(Instance.new("Frame"),SG,{BackgroundColor3=Color3.fromRGB(12,12,14),BorderSizePixel=0,Position=UDim2.new(0.2,0,0.15,0),Size=UDim2.new(0,560,0,400),Active=true,ZIndex=10})
+MB.MouseButton1Click:Connect(function() MF.Visible=not MF.Visible end)
+
+local TB=cInst(Instance.new("Frame"),MF,{BackgroundColor3=Color3.fromRGB(18,19,23),BorderSizePixel=0,Size=UDim2.new(1,0,0,32),ZIndex=11})
+cLbl(TB,"justhuman.lua",UDim2.new(0,14,0,0),UDim2.new(1,-14,1,0),0)
+
+local dT,dS,sP=false,nil,nil
+TB.InputBegan:Connect(function(i) if i.UserInputType.Name=="MouseButton1" or i.UserInputType.Name=="Touch" then dT=true;dS=i.Position;sP=MF.Position end end)
+UIS.InputChanged:Connect(function(i) if dT and (i.UserInputType.Name=="MouseMovement" or i.UserInputType.Name=="Touch") then local d=i.Position-dS;MF.Position=UDim2.new(sP.X.Scale,sP.X.Offset+d.X,sP.Y.Scale,sP.Y.Offset+d.Y) end end)
+UIS.InputEnded:Connect(function(i) if i.UserInputType.Name=="MouseButton1" or i.UserInputType.Name=="Touch" then dT=false end end)
+
+cInst(Instance.new("Frame"),MF,{BackgroundColor3=Color3.fromRGB(10,11,12),BorderSizePixel=0,Position=UDim2.new(0,0,0,32),Size=UDim2.new(0,50,1,-32),ZIndex=11})
+local LPn=cInst(Instance.new("Frame"),MF,{BackgroundTransparency=1,Position=UDim2.new(0,65,0,48),Size=UDim2.new(0,235,1,-64),ZIndex=11})
+local RPn=cInst(Instance.new("Frame"),MF,{BackgroundTransparency=1,Position=UDim2.new(0,315,0,48),Size=UDim2.new(0,230,1,-64),ZIndex=11})
+cInst(Instance.new("UIListLayout"),LPn,{Padding=UDim.new(0,14)});cInst(Instance.new("UIListLayout"),RPn,{Padding=UDim.new(0,14)})
+
+local function cSec(p,t,y)
+    local s=cInst(Instance.new("Frame"),p,{BackgroundColor3=Color3.fromRGB(17,18,22),BorderSizePixel=0,Size=UDim2.new(1,0,0,y),ZIndex=12})
+    cInst(Instance.new("TextLabel"),s,{BackgroundTransparency=1,Position=UDim2.new(0,12,0,8),Size=UDim2.new(1,-24,0,16),Font=Enum.Font.Code,Text=t,TextColor3=Color3.fromRGB(150,155,165),TextSize=13,TextXAlignment=0,ZIndex=13})
+    cInst(Instance.new("TextLabel"),s,{BackgroundTransparency=1,Position=UDim2.new(1,-20,0,8),Size=UDim2.new(0,12,0,16),Font=Enum.Font.Code,Text="•",TextColor3=Color3.fromRGB(120,125,135),TextSize=14,ZIndex=13})
+    return s
+end
+
+local function cRow(s,t,y)
+    local b=cInst(Instance.new("TextButton"),s,{BackgroundTransparency=1,Position=UDim2.new(0,12,0,y),Size=UDim2.new(1,-24,0,22),Font=Enum.Font.Code,Text="",ZIndex=13})
+    cInst(Instance.new("Frame"),b,{Name="Indicator",BackgroundColor3=Color3.fromRGB(25,27,32),BorderSizePixel=0,Position=UDim2.new(0,2,0.5,-6),Size=UDim2.new(0,12,0,12),ZIndex=14})
+    cInst(Instance.new("TextLabel"),b,{BackgroundTransparency=1,Position=UDim2.new(0,22,0,0),Size=UDim2.new(1,-22,1,0),Font=Enum.Font.Code,Text=t,TextColor3=Color3.fromRGB(160,165,175),TextSize=13,TextXAlignment=0,ZIndex=14})
+    return b
+end
+
+local function cSld(s,t,mn,mx,st,y,cb)
+    cLbl(s,t,UDim2.new(0,12,0,y),UDim2.new(0,120,0,14),0).TextColor3=Color3.fromRGB(110,115,125)
+    local v=cLbl(s,tostring(st),UDim2.new(1,-92,0,y),UDim2.new(0,80,0,14),1);v.TextColor3=Color3.fromRGB(110,115,125)
+    local bg=cInst(Instance.new("TextButton"),s,{BackgroundColor3=Color3.fromRGB(24,25,29),BorderSizePixel=0,Position=UDim2.new(0,12,0,y+16),Size=UDim2.new(1,-24,0,4),Text="",ZIndex=13})
+    local fl=cInst(Instance.new("Frame"),bg,{BackgroundColor3=Color3.fromRGB(162,137,245),BorderSizePixel=0,Size=UDim2.new(math.clamp((st-mn)/(mx-mn),0,1),0,1,0),ZIndex=14})
+    local drag=false;local function up(inpt) local pct=math.clamp((inpt.Position.X-bg.AbsolutePosition.X)/bg.AbsoluteSize.X,0,1);fl.Size=UDim2.new(pct,0,1,0);local c=math.floor(mn+(pct*(mx-mn)));v.Text=tostring(c);cb(c) end
+    bg.InputBegan:Connect(function(i) if i.UserInputType.Name=="MouseButton1" or i.UserInputType.Name=="Touch" then drag=true;up(i) end end)
+    UIS.InputChanged:Connect(function(i) if drag and (i.UserInputType.Name=="MouseMovement" or i.UserInputType.Name=="Touch") then up(i) end end)
+    UIS.InputEnded:Connect(function(i) if i.UserInputType.Name=="MouseButton1" or i.UserInputType.Name=="Touch" then drag=false end end)
+end
+
+local LuaS=cSec(LPn,"Lua Settings",145);local VBtn=cRow(LuaS,"Void",30);cSld(LuaS,"Min Distance (Display)",0,100000,50000,60,function() end);cSld(LuaS,"Max Distance (Display)",0,100000,50000,100,function() end)
+local OrbS=cSec(LPn,"Directions to a fosterhome",185);local OBtn=cRow(OrbS,"Enable Orbit Loop",26);local TBtn=cRow(OrbS,"Team Check",50);cSld(OrbS,"Orbit Radius Distance",0,10000000,cDist,82,function(v) cDist=v end);cSld(OrbS,"Orbit Rotate Speed Rate",0,10000000,cSpeed,126,function(v) cSpeed=v end)
+
+local TS=cSec(RPn,"Target Selector",80)
+local TDB=cInst(Instance.new("TextButton"),TS,{BackgroundTransparency=1,Position=UDim2.new(0,12,0,35),Size=UDim2.new(1,-24,0,20),Font=Enum.Font.Code,Text="Closest Enemy ▼",TextColor3=Color3.fromRGB(120,125,135),TextXAlignment=0,TextSize=13,ZIndex=15})
+local TDF=cInst(Instance.new("Frame"),TDB,{BackgroundColor3=Color3.fromRGB(20,21,25),BorderSizePixel=1,BorderColor3=Color3.fromRGB(35,37,43),Position=UDim2.new(0,0,1,2),Size=UDim2.new(1,0,0,60),Visible=false,ZIndex=16})
+local tOpts={"Closest Enemy","Farthest Enemy","Random Target"}
+for idx, opt in ipairs(tOpts) do
+    local optB=cInst(Instance.new("TextButton"),TDF,{BackgroundTransparency=1,Position=UDim2.new(0,6,0,(idx-1)*20),Size=UDim2.new(1,-12,0,20),Font=Enum.Font.Code,Text=opt,TextColor3=Color3.fromRGB(140,145,155),TextSize=12,TextXAlignment=0,ZIndex=17})
+    optB.MouseButton1Click:Connect(function() TDB.Text=opt.." ▼";tMode=opt:split(" ");TDF.Visible=false end)
+end
+TDB.MouseButton1Click:Connect(function() TDF.Visible=not TDF.Visible end)
+
+local AntS=cSec(RPn,"Anti Aim Settings",70);local ABtn=cRow(AntS,"Enable Anti Aim (Glitch)",30)
+
+local function tVis(b,s) local x=b:FindFirstChild("Indicator") if x then x.BackgroundColor3=s and Color3.fromRGB(162,137,245) or Color3.fromRGB(25,27,32) end end
+local function gH() local c=LP.Character return c and c:FindFirstChild("HumanoidRootPart") or nil end
+local function isTeammate(p) if p.Team and LP.Team and p.Team==LP.Team then return true end; if p.Character and LP.Character then local tC=p:GetAttribute("TeamColor") or p:GetAttribute("Team");local lC=LP:GetAttribute("TeamColor") or LP:GetAttribute("Team") if tC and lC and tC==lC then return true end end return false end
+
+VBtn.MouseButton1Click:Connect(function() vRun=not vRun;tVis(VBtn,vRun) if vRun then task.spawn(function() while vRun do local h=gH() if h then h.CFrame=h.CFrame+Vector3.new(0,cVoid,0);h.Velocity=Vector3.new(0,0,0) end;task.wait() end end) end end)
+TBtn.MouseButton1Click:Connect(function() teamCheck=not teamCheck;tVis(TBtn,teamCheck) end)
+
+OBtn.MouseButton1Click:Connect(function() oRun=not oRun;tVis(OBtn,oRun) if oRun then task.spawn(function() local a=0 while oRun do local h=gH() local t,cD,fD=nil,math.huge,-1 local plrs={} for _,p in ipairs(P:GetPlayers()) do if p~=LP and p.Character then if teamCheck and isTeammate(p) then continue end;local th,tm=p.Character:FindFirstChild("HumanoidRootPart"),p.Character:FindFirstChild("Humanoid") if th and tm and tm.Health>0 then table.insert(plrs,{h=th,d=LP:DistanceFromCharacter(th.Position)}) end end end;if #plrs>0 then if tMode=="Closest" then for _,v in ipairs(plrs) do if v.d<cD then cD=v.d;t=v.h end end elseif tMode=="Farthest" then for _,v in ipairs(plrs) do if v.d>fD then fD=v.d;t=v.h end end else t=plrs[math.random(1,#plrs)].h end end;if t and h then a=a+cSpeed;h.Velocity=Vector3.new(0,0,0);local targetY=vRun and h.Position.Y or (t.Position.Y+2);h.CFrame=CFrame.new(t.Position.X+math.cos(a)*cDist,targetY,t.Position.Z+math.sin(a)*cDist) end;task.wait() end end) end end)
+ABtn.MouseButton1Click:Connect(function() aRun=not aRun;tVis(ABtn,aRun) if aRun then task.spawn(function() while aRun do local h=gH() if h then local r=math.random;h.CFrame=(h.CFrame+Vector3.new(r(-5,5)/10,r(-2,2)/10,r(-5,5)/10))*CFrame.Angles(math.rad(r(-180,180)),math.rad(r(-180,180)),math.rad(r(-180,180))) end;RS.RenderStepped:Wait() end end) end end)
